@@ -4,12 +4,22 @@
 #include <ctime>
 #include <mutex>
 
+#include "timer.h"
+#include "msg_queue.h"
+
 using namespace std;
 
 mutex pantalla;
 
+typedef struct {
+    int inicio;
+    int fin;
+} par;
 
-void tarea(int inicio, int fin);
+msg_queue<par> sms;
+
+
+void tarea();
 
 
 bool esPrimo(unsigned int num) {
@@ -20,29 +30,40 @@ bool esPrimo(unsigned int num) {
     return true;
 }
 
-#define CANT_HILOS 30
+#define CANT_HILOS 8
+#define INTERVALO 500
 
 int main() {
-    vector<thread> h;
+    thread *h[CANT_HILOS];
+    timer tiempo;
+    par dato;
     unsigned int inicio = 2;
     unsigned int fin = 300000;
     unsigned int intervalo = (fin - inicio) / CANT_HILOS;
 
-
-
     for (int j = 0; j < CANT_HILOS; j++) {
-        h.emplace_back(tarea, inicio + intervalo * j, inicio + intervalo * (j + 1) - 1);
+        h[j] = new thread(tarea);
+    }
+    for (int i = 2; i < CANT_HILOS; i = i + INTERVALO) {
+        dato.inicio = i;
+        dato.fin = i + INTERVALO - 1;
+        sms.enqueue(dato);
     }
 
+    tiempo.iniciar();
     for (auto &actual : h)
-        actual.join();
+        actual->join();
+    tiempo.end();
 
     return 0;
 }
 
-void tarea(int inicio, int fin) {
+void tarea() {
+    par dato;
 
-    for (int i = inicio; i < fin; i++)
+    dato = sms.dequeue();
+
+    for (int i = dato.inicio; i < dato.fin; i++)
         if (esPrimo(i)) {
             pantalla.lock();
             std::cout << i << std::endl;

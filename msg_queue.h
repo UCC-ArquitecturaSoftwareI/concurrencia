@@ -33,6 +33,7 @@ public:
         }
         T val = cola.front();
         cola.pop();
+        cond.notify_one();
         return val;
     }
 
