@@ -44,7 +44,7 @@ int main() {
     for (int j = 0; j < CANT_HILOS; j++) {
         h[j] = new thread(tarea);
     }
-    for (int i = 2; i < CANT_HILOS; i = i + INTERVALO) {
+    for (int i = 2; i <= fin; i = i + INTERVALO) {
         dato.inicio = i;
         dato.fin = i + INTERVALO - 1;
         sms.enqueue(dato);
